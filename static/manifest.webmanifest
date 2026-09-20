@@ -1,0 +1,24 @@
+{
+  "name": "Haleigh's Music Studio",
+  "short_name": "Haleigh's Studio",
+  "description": "Write, arrange, and transform guitar songs with AI assistance.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fffafd",
+  "theme_color": "#ec4f92",
+  "icons": [
+    {
+      "src": "/app/static/app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/app/static/app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
