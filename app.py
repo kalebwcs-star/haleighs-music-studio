@@ -44,10 +44,14 @@ def install_app_metadata():
         """
         <script>
         try {
-            const doc = window.parent.document;
             const origin = window.parent.location.origin;
+            const documents = [window.parent.document];
 
-            function upsertLink(rel, id, href, sizes) {
+            if (window.top.document !== window.parent.document) {
+                documents.push(window.top.document);
+            }
+
+            function upsertLink(doc, rel, id, href, sizes) {
                 let link = doc.getElementById(id);
                 if (!link) {
                     link = doc.createElement("link");
@@ -59,7 +63,7 @@ def install_app_metadata():
                 if (sizes) link.sizes = sizes;
             }
 
-            function upsertMeta(name, content) {
+            function upsertMeta(doc, name, content) {
                 let meta = doc.querySelector(`meta[name="${name}"]`);
                 if (!meta) {
                     meta = doc.createElement("meta");
@@ -69,27 +73,32 @@ def install_app_metadata():
                 meta.content = content;
             }
 
-            upsertLink(
-                "apple-touch-icon",
-                "haleigh-apple-icon",
-                `${origin}/app/static/app-icon-180.png?v=3`,
-                "180x180"
-            );
-            upsertLink(
-                "icon",
-                "haleigh-browser-icon",
-                `${origin}/app/static/app-icon-192.png?v=3`,
-                "192x192"
-            );
-            upsertLink(
-                "manifest",
-                "haleigh-manifest",
-                `${origin}/app/static/manifest.webmanifest?v=3`
-            );
-            upsertMeta("apple-mobile-web-app-capable", "yes");
-            upsertMeta("apple-mobile-web-app-status-bar-style", "default");
-            upsertMeta("apple-mobile-web-app-title", "Haleigh's Studio");
-            upsertMeta("theme-color", "#ec4f92");
+            for (const doc of documents) {
+                upsertLink(
+                    doc,
+                    "apple-touch-icon",
+                    "haleigh-apple-icon",
+                    `${origin}/app/static/app-icon-180.png?v=4`,
+                    "180x180"
+                );
+                upsertLink(
+                    doc,
+                    "icon",
+                    "haleigh-browser-icon",
+                    `${origin}/app/static/app-icon-192.png?v=4`,
+                    "192x192"
+                );
+                upsertLink(
+                    doc,
+                    "manifest",
+                    "haleigh-manifest",
+                    `${origin}/app/static/manifest.webmanifest?v=4`
+                );
+                upsertMeta(doc, "apple-mobile-web-app-capable", "yes");
+                upsertMeta(doc, "apple-mobile-web-app-status-bar-style", "default");
+                upsertMeta(doc, "apple-mobile-web-app-title", "Haleigh's Studio");
+                upsertMeta(doc, "theme-color", "#ec4f92");
+            }
         } catch (error) {
             console.debug("App icon metadata could not be updated.", error);
         }
