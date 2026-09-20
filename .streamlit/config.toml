@@ -1,0 +1,10 @@
+[theme]
+base = "light"
+primaryColor = "#ec4f92"
+backgroundColor = "#f7f3f6"
+secondaryBackgroundColor = "#fffafd"
+textColor = "#24212a"
+font = "sans serif"
+
+[browser]
+gatherUsageStats = false
