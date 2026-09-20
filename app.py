@@ -1,8 +1,10 @@
 import base64
 import hashlib
+import importlib
 import json
 from pathlib import Path
 
+import song_engine
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -10,7 +12,6 @@ from song_engine import (
     get_capo_recommendation,
     refine_lyrics,
     suggest_chords,
-    transform_song,
 )
 
 
@@ -553,7 +554,11 @@ with transform_tab:
             st.warning("Please tell the AI what you want changed.")
         else:
             with st.spinner("Transforming the arrangement..."):
-                transformed_song, transform_notes = transform_song(
+                # Streamlit can rerun app.py while retaining an older imported
+                # song_engine module. Reload it here so newly deployed editor
+                # arguments and the engine always stay in sync.
+                current_song_engine = importlib.reload(song_engine)
+                transformed_song, transform_notes = current_song_engine.transform_song(
                     song_text=source_song,
                     instructions=transform_request,
                     current_key=current_key,
