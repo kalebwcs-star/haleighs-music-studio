@@ -17,6 +17,8 @@ from song_engine import (
 
 APP_NAME = "Haleigh's Music Studio"
 KEYS = ["C", "C#/Db", "D", "Eb", "E", "F", "F#/Gb", "G", "Ab", "A", "Bb", "B"]
+WRITER_KEYS = ["C", "D", "E", "F", "G", "A", "B"]
+STYLES = ["Christian", "Country", "Rock", "Pop"]
 CAPO_POSITIONS = ["Not sure", "No capo", *[f"Fret {fret}" for fret in range(1, 13)]]
 MOODS = [
     "Happy",
@@ -255,6 +257,7 @@ if st.session_state.get("confirm_new_song"):
                 "refined_lyrics_editor",
                 "lyric_suggestions",
                 "pending_lyrics",
+                "transform_title",
                 "transform_source",
                 "transform_request",
                 "transform_current_key",
@@ -307,10 +310,45 @@ if saved_song_file is not None:
             loaded_song.setdefault("capo_fret", 0)
             loaded_song.setdefault("chord_shape_key", loaded_song["key"])
 
+            loaded_mood = str(loaded_song.get("mood", "Reflective")).title()
+            loaded_style = str(loaded_song.get("style", "Christian")).title()
+            loaded_key = str(loaded_song.get("key", "C"))
+
+            if loaded_mood not in MOODS:
+                loaded_mood = "Reflective"
+            if loaded_style not in STYLES:
+                loaded_style = "Christian"
+            if loaded_key not in WRITER_KEYS:
+                loaded_key = "C"
+
+            try:
+                loaded_capo_fret = int(loaded_song.get("capo_fret", 0))
+            except (TypeError, ValueError):
+                loaded_capo_fret = 0
+
+            loaded_capo_fret = max(0, min(12, loaded_capo_fret))
+            loaded_song["mood"] = loaded_mood
+            loaded_song["style"] = loaded_style
+            loaded_song["key"] = loaded_key
+            loaded_song["capo_fret"] = loaded_capo_fret
+            loaded_song["title"] = str(loaded_song.get("title", "Untitled Song"))
+            loaded_song["original_lyrics"] = str(loaded_song.get("original_lyrics", ""))
+            loaded_song["suggested_arrangement"] = str(
+                loaded_song.get("suggested_arrangement", "")
+            )
+            if loaded_song.get("chord_shape_key") not in WRITER_KEYS:
+                loaded_song["chord_shape_key"] = loaded_key
+
             st.session_state["song_result"] = loaded_song
             st.session_state["arrangement_editor"] = loaded_song["suggested_arrangement"]
+            st.session_state["song_title_input"] = loaded_song["title"]
+            st.session_state["mood_input"] = loaded_mood
+            st.session_state["key_input"] = loaded_key
+            st.session_state["style_input"] = loaded_style
+            st.session_state["use_capo_input"] = loaded_capo_fret > 0
+            st.session_state["lyrics_input"] = loaded_song["original_lyrics"]
             st.session_state["loaded_file_fingerprint"] = file_fingerprint
-            st.success(f"Opened {loaded_song['title']}.")
+            st.success(f"Opened {loaded_song['title']}. Continue editing it in Write a Song.")
         except (UnicodeDecodeError, json.JSONDecodeError, ValueError, TypeError) as error:
             st.error(f"That song file could not be opened: {error}")
 
@@ -333,19 +371,21 @@ with write_tab:
     with right_column:
         key = st.selectbox(
             "Musical key",
-            ["C", "D", "E", "F", "G", "A", "B"],
+            WRITER_KEYS,
             key="key_input",
         )
 
     style = st.selectbox(
         "Music style",
-        ["Christian", "Country", "Rock", "Pop"],
+        STYLES,
         key="style_input",
     )
 
+    if "use_capo_input" not in st.session_state:
+        st.session_state["use_capo_input"] = True
+
     use_capo = st.checkbox(
         "Recommend an easy capo position",
-        value=True,
         help="The song will still sound in your chosen key, but the chords may be easier to play.",
         key="use_capo_input",
     )
@@ -499,6 +539,12 @@ with transform_tab:
         "It can simplify chords, transpose keys, add chords, or adjust the arrangement."
     )
 
+    transform_title = st.text_input(
+        "Song title",
+        placeholder="Enter the song title",
+        key="transform_title",
+    )
+
     source_song = st.text_area(
         "Paste the existing song",
         placeholder="Paste the lyrics and any chords here...",
@@ -574,6 +620,19 @@ with transform_tab:
                 st.session_state["transform_notes"] = transform_notes
 
     if "transform_result" in st.session_state:
+        transformed_title = transform_title.strip() or "Transformed Song"
+        transformed_safe_title = transformed_title.replace(" ", "_")
+        transformed_key = (
+            target_key
+            if target_key in WRITER_KEYS
+            else current_key if current_key in WRITER_KEYS else "C"
+        )
+        transformed_capo_fret = (
+            int(current_capo.split()[-1])
+            if current_capo.startswith("Fret ")
+            else 0
+        )
+
         st.subheader("Transformed song")
         st.info(st.session_state.get("transform_notes", "Review the changes below."))
         st.caption("You can edit the result before downloading it.")
@@ -586,10 +645,41 @@ with transform_tab:
         )
         st.session_state["transform_result"] = transformed_editor
 
-        st.download_button(
-            "Download transformed song",
-            data=transformed_editor,
-            file_name="transformed_song.txt",
-            mime="text/plain",
-            use_container_width=True,
+        transformed_data = {
+            "title": transformed_title,
+            "mood": "Reflective",
+            "key": transformed_key,
+            "style": "Christian",
+            "capo_fret": transformed_capo_fret,
+            "chord_shape_key": transformed_key,
+            "original_lyrics": source_song,
+            "suggested_arrangement": transformed_editor,
+            "transform_notes": st.session_state.get("transform_notes", ""),
+        }
+        transformed_text = (
+            f"Song: {transformed_title}\n"
+            f"Key: {transformed_key}\n"
+            f"Capo fret: {transformed_capo_fret}\n\n"
+            f"{transformed_editor}"
         )
+        transformed_json = json.dumps(transformed_data, indent=4)
+
+        readable_column, editable_column = st.columns(2)
+
+        with readable_column:
+            st.download_button(
+                "Download readable song",
+                data=transformed_text,
+                file_name=f"{transformed_safe_title}.txt",
+                mime="text/plain",
+                use_container_width=True,
+            )
+
+        with editable_column:
+            st.download_button(
+                "Download editable song data",
+                data=transformed_json,
+                file_name=f"{transformed_safe_title}.json",
+                mime="application/json",
+                use_container_width=True,
+            )
