@@ -16,6 +16,7 @@ from song_engine import (
 
 APP_NAME = "Haleigh's Music Studio"
 KEYS = ["C", "C#/Db", "D", "Eb", "E", "F", "F#/Gb", "G", "Ab", "A", "Bb", "B"]
+CAPO_POSITIONS = ["Not sure", "No capo", *[f"Fret {fret}" for fret in range(1, 13)]]
 MOODS = [
     "Happy",
     "Sad",
@@ -256,6 +257,7 @@ if st.session_state.get("confirm_new_song"):
                 "transform_source",
                 "transform_request",
                 "transform_current_key",
+                "transform_current_capo",
                 "transform_target_key",
                 "transform_result",
                 "transform_editor",
@@ -519,6 +521,16 @@ with transform_tab:
             key="transform_target_key",
         )
 
+    current_capo = st.selectbox(
+        "Current capo position",
+        CAPO_POSITIONS,
+        help=(
+            "Tell the AI where the capo is now. Choose No capo if the song uses open chords, "
+            "or Not sure if you do not know."
+        ),
+        key="transform_current_capo",
+    )
+
     transform_request = st.text_area(
         "What should the AI change?",
         placeholder=(
@@ -545,6 +557,7 @@ with transform_tab:
                     song_text=source_song,
                     instructions=transform_request,
                     current_key=current_key,
+                    current_capo=current_capo,
                     target_key=target_key,
                 )
 

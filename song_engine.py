@@ -133,7 +133,7 @@ Lyrics:
         return friendly_gemini_error(error, "generate chord suggestions")
 
 
-def transform_song(song_text, instructions, current_key, target_key):
+def transform_song(song_text, instructions, current_key, current_capo, target_key):
     key_direction = (
         f"Transpose the song to {target_key}."
         if target_key != "Keep current / let AI decide"
@@ -144,6 +144,11 @@ def transform_song(song_text, instructions, current_key, target_key):
         if current_key != "Not sure"
         else "The current key is unknown; infer it from the chords when possible."
     )
+    capo_information = (
+        "The current capo position is unknown."
+        if current_capo == "Not sure"
+        else f"The guitarist currently uses {current_capo.lower()}."
+    )
 
     prompt = f"""
 You are a practical guitar arrangement editor.
@@ -151,6 +156,7 @@ You are a practical guitar arrangement editor.
 Transform the pasted song according to the user's request.
 
 Current-key information: {known_key}
+Current-capo information: {capo_information}
 Target-key instruction: {key_direction}
 User's request: {instructions}
 
@@ -158,6 +164,7 @@ Rules:
 - Preserve every lyric word and the order of all sections unless the user explicitly asks for lyric changes.
 - When transposing, transpose every chord consistently, including slash chords.
 - When simplifying, choose common open guitar chords and recommend a capo when that keeps the requested sounding key.
+- If the user asks for a different capo position, account for both the current chord shapes and current capo position so the song keeps the intended sounding key.
 - Keep chord lines immediately above their lyric lines.
 - Preserve labels such as Verse, Chorus, Bridge, and Intro.
 - If the pasted song has lyrics but no chords, add suitable guitar chords.
