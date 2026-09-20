@@ -32,12 +32,17 @@ Keep the Terminal window open while using the app. To stop the app, click the Te
 - Corrects spelling, grammar, capitalization, and punctuation in lyrics.
 - Gives optional songwriting suggestions.
 - Places guitar chords above lyric words using Gemini.
+- Includes 12 moods: Happy, Sad, Chill, Angry, Hopeful, Romantic,
+  Worshipful, Reflective, Energetic, Peaceful, Heartbroken, and Triumphant.
 - Supports Christian, Country, Rock, and Pop styles.
 - Recommends an easy guitar capo position.
 - Lets the songwriter edit the finished arrangement.
+- Includes a separate song-transform workspace for pasted songs. It can
+  simplify chords, transpose keys, add chords, and follow custom instructions.
 - Downloads readable text and reusable song-data files.
 - Reopens saved song-data files for later editing.
 - Includes a confirmed New Song reset.
+- Uses Haleigh's artwork for the browser and Home Screen app icon.
 
 ## Important
 
@@ -52,5 +57,8 @@ The deployment-ready files in this folder can be hosted on Streamlit Community C
 - On iPhone or iPad, open the hosted link in Safari, tap Share, and choose **Add to Home Screen**.
 - On a PC or Mac, open the hosted link in Chrome or Edge and create an app shortcut from the browser menu.
 - Future updates are published from the connected GitHub repository and appear without reinstalling the app.
+
+If an older Home Screen shortcut shows the wrong icon, delete that shortcut and
+add the hosted app to the Home Screen again. iPhone and iPad cache shortcut icons.
 
 Saved songs, learning exercises, the local launcher, and API secrets are intentionally excluded from deployment.

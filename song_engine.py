@@ -131,3 +131,64 @@ Lyrics:
         return response.output_text
     except Exception as error:
         return friendly_gemini_error(error, "generate chord suggestions")
+
+
+def transform_song(song_text, instructions, current_key, target_key):
+    key_direction = (
+        f"Transpose the song to {target_key}."
+        if target_key != "Keep current / let AI decide"
+        else "Keep the current key unless the user's instructions request a change."
+    )
+    known_key = (
+        f"The song is currently in {current_key}."
+        if current_key != "Not sure"
+        else "The current key is unknown; infer it from the chords when possible."
+    )
+
+    prompt = f"""
+You are a practical guitar arrangement editor.
+
+Transform the pasted song according to the user's request.
+
+Current-key information: {known_key}
+Target-key instruction: {key_direction}
+User's request: {instructions}
+
+Rules:
+- Preserve every lyric word and the order of all sections unless the user explicitly asks for lyric changes.
+- When transposing, transpose every chord consistently, including slash chords.
+- When simplifying, choose common open guitar chords and recommend a capo when that keeps the requested sounding key.
+- Keep chord lines immediately above their lyric lines.
+- Preserve labels such as Verse, Chorus, Bridge, and Intro.
+- If the pasted song has lyrics but no chords, add suitable guitar chords.
+- Do not use Markdown code fences.
+- Use the two exact headings below.
+
+TRANSFORMED SONG:
+<the complete transformed chord-and-lyric sheet>
+
+NOTES:
+<a short explanation of the key, capo, and important changes>
+
+Pasted song:
+{song_text}
+"""
+
+    try:
+        client = genai.Client()
+        response = client.interactions.create(
+            model="gemini-3.5-flash-lite",
+            input=prompt,
+        )
+        result = response.output_text.strip()
+        song_heading = "TRANSFORMED SONG:"
+        notes_heading = "NOTES:"
+
+        if song_heading in result and notes_heading in result:
+            transformed_section = result.split(song_heading, 1)[1]
+            transformed_song, notes = transformed_section.split(notes_heading, 1)
+            return transformed_song.strip(), notes.strip()
+
+        return result, "Review the transformed arrangement before downloading."
+    except Exception as error:
+        return None, friendly_gemini_error(error, "transform the song")
