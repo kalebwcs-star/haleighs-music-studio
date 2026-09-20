@@ -45,6 +45,9 @@ def install_app_metadata():
         <script>
         try {
             const origin = window.parent.location.origin;
+            const parentPath = window.parent.location.pathname;
+            const appPath = parentPath.endsWith("/") ? parentPath : `${parentPath}/`;
+            const staticPath = `${origin}${appPath}app/static`;
             const documents = [window.parent.document];
 
             if (window.top.document !== window.parent.document) {
@@ -78,21 +81,21 @@ def install_app_metadata():
                     doc,
                     "apple-touch-icon",
                     "haleigh-apple-icon",
-                    `${origin}/app/static/app-icon-180.png?v=4`,
+                    `${staticPath}/app-icon-180.png?v=5`,
                     "180x180"
                 );
                 upsertLink(
                     doc,
                     "icon",
                     "haleigh-browser-icon",
-                    `${origin}/app/static/app-icon-192.png?v=4`,
+                    `${staticPath}/app-icon-192.png?v=5`,
                     "192x192"
                 );
                 upsertLink(
                     doc,
                     "manifest",
                     "haleigh-manifest",
-                    `${origin}/app/static/manifest.webmanifest?v=4`
+                    `${staticPath}/manifest.webmanifest?v=5`
                 );
                 upsertMeta(doc, "apple-mobile-web-app-capable", "yes");
                 upsertMeta(doc, "apple-mobile-web-app-status-bar-style", "default");
